@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  prod-mikefritzsche-react-app:
+    container_name: prod-mikefritzsche-react-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prod-mikefritzsche-react-app.rule=Host(`dev.mikefritzsche.com`)"
+      - "traefik.http.routers.prod-mikefritzsche-react-app.tls=true"
+      - "traefik.http.services.prod-mikefritzsche-react-app.loadbalancer.server.port=80"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
