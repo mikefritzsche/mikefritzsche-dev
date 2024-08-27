@@ -1,8 +1,4 @@
-#
 version: 2.1
-
-orbs:
-  slack: circleci/slack@4.6.0  # Correct version of the Slack Orb
 
 executors:
   node-executor:
@@ -26,6 +22,7 @@ jobs:
           command: |
             set -e
             git fetch --tags
+            # Determine the initial version
             CURRENT_VERSION=$(git tag --list "v*" | sort -V | tail -n1)
             echo "CURRENT_VERSION=${CURRENT_VERSION}"
             if [ -z "$CURRENT_VERSION" ]; then
@@ -33,6 +30,14 @@ jobs:
             else
               NEW_VERSION=$(npx semver -i patch "${CURRENT_VERSION}")
             fi
+            
+            # Check if the tag already exists and increment if necessary
+            while git rev-parse "${NEW_VERSION}" >/dev/null 2>&1; do
+              echo "Tag ${NEW_VERSION} already exists. Incrementing patch version."
+              NEW_VERSION=$(npx semver -i patch "${NEW_VERSION}")
+            done
+            
+            echo "Final version: ${NEW_VERSION}"
             echo "NEW_VERSION=${NEW_VERSION}" >> build.env
             echo "New version determined: ${NEW_VERSION}"
       - run:
@@ -47,36 +52,6 @@ jobs:
           root: .
           paths:
             - build.env  # Persist the environment variable to the workspace
-      - slack/notify:
-          event: pass
-          template: basic_success
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Build Success*: Docker Image ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} has been built and pushed successfully."
-                  }
-                }
-              ]
-            }
-      - slack/notify:
-          event: fail
-          template: basic_fail
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Build Failed*: The build process failed. Please check the logs for more details."
-                  }
-                }
-              ]
-            }
 
   deploy:
     executor: node-executor
@@ -117,6 +92,7 @@ jobs:
       - run:
           name: List Git Tags (Debugging)
           command: git tag
+
       - slack/notify:
           event: pass
           template: basic_success
