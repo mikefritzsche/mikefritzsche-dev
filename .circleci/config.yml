@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  slack: circleci/slack@4.9.2  # Slack Orb
+  slack: circleci/slack@4.6.0  # Correct version of the Slack Orb
 
 executors:
   node-executor:
@@ -48,7 +48,7 @@ jobs:
             - build.env  # Persist the environment variable to the workspace
       - slack/notify:
           event: pass
-          template: "Basic success message"
+          template: basic_success
           custom: |
             {
               "blocks": [
@@ -63,7 +63,7 @@ jobs:
             }
       - slack/notify:
           event: fail
-          template: "Basic failure message"
+          template: basic_fail
           custom: |
             {
               "blocks": [
@@ -112,50 +112,4 @@ jobs:
           command: |
             source build.env
             git tag "${NEW_VERSION}"
-            git push https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git "${NEW_VERSION}"
-      - run:
-          name: List Git Tags (Debugging)
-          command: git tag
-      - slack/notify:
-          event: pass
-          template: "Basic success message"
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Deployment Success*: The image ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} has been deployed successfully."
-                  }
-                }
-              ]
-            }
-      - slack/notify:
-          event: fail
-          template: "Basic failure message"
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Deployment Failed*: The deployment process failed. Please check the logs for more details."
-                  }
-                }
-              ]
-            }
-
-workflows:
-  version: 2
-  build_and_deploy:
-    jobs:
-      - build:
-          context: do-secrets
-      - deploy:
-          context:
-            - do-secrets
-            - slack-secrets  # Add slack-secrets context here
-          requires:
-            - build
+            git push https://${GITHUB_TOKEN}:x-o​⬤
