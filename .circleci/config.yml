@@ -15,8 +15,8 @@ jobs:
       - run:
           name: Build and Push Docker image
           command: |
-            # Truncate the Git commit hash to the first 7 characters
-            SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-7)
+            # Truncate the Git commit hash to the first 8 characters
+            SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-8)
             
             # Build the Docker image with the DOCKER_USERNAME environment variable
             docker build -t ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} .
@@ -26,6 +26,27 @@ jobs:
             
             # Push the image to Docker Hub
             docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
+
+      - run:
+          name: Deploy to DigitalOcean
+          command: |
+            # SSH into DigitalOcean and run Docker commands
+            ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP << EOF
+              # Pull the latest image
+              docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
+            
+              # Stop the existing container
+              docker stop mikefritzsche-dev || true
+            
+              # Remove the existing container
+              docker rm mikefritzsche-dev || true
+            
+              # Start a new container with the updated image
+              docker run -d --name mikefritzsche-dev --network proxy -p 80:80 ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
+            
+              # Append the truncated SHA to a deployment log
+              echo "Deployed image with SHA: ${SHORT_SHA}" >> /path/to/deployment-log.txt
+            EOF
 
 workflows:
   version: 2
