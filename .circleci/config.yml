@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  slack: circleci/slack@4.6.0  # Ensure the Slack Orb is imported with the correct version
+  slack: circleci/slack@4.6.0
 
 executors:
   node-executor:
@@ -25,11 +25,11 @@ jobs:
           command: |
             set -e
             git fetch --tags
-            # Determine the initial version
-            CURRENT_VERSION=$(git tag --list "v*" | sort -V | tail -n1)
+            # Determine the initial version without the 'v' prefix
+            CURRENT_VERSION=$(git tag --list | sort -V | tail -n1)
             echo "CURRENT_VERSION=${CURRENT_VERSION}"
             if [ -z "$CURRENT_VERSION" ]; then
-              NEW_VERSION="v1.0.0"
+              NEW_VERSION="1.0.0"
             else
               NEW_VERSION=$(npx semver -i patch "${CURRENT_VERSION}")
             fi
@@ -55,36 +55,6 @@ jobs:
           root: .
           paths:
             - build.env  # Persist the environment variable to the workspace
-      - slack/notify:
-          event: pass
-          template: basic_success
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Build Success*: Docker Image ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} has been built and pushed successfully."
-                  }
-                }
-              ]
-            }
-      - slack/notify:
-          event: fail
-          template: basic_fail
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Build Failed*: The build process failed. Please check the logs for more details."
-                  }
-                }
-              ]
-            }
 
   deploy:
     executor: node-executor
