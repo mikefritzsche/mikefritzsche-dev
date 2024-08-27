@@ -3,12 +3,11 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: cimg/node:18.17  # Updated to use cimg/node:18.17
+      - image: cimg/node:18.17
 
 jobs:
   build:
     executor: node-executor
-    context: do-secrets  # Referencing the do-secrets context
     steps:
       - checkout
       - setup_remote_docker:
@@ -24,4 +23,5 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
-      - build
+      - build:
+          context: do-secrets  # Apply context at the workflow level
