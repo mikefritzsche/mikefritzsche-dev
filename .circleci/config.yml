@@ -9,24 +9,32 @@ jobs:
   build:
     executor: node-executor
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "SHA256:nO6gr+FnuBT6+A/J49EjMDjuem5wM4zp0wbAYhFKOps"
       - checkout
       - setup_remote_docker:
           version: 20.10.7
       - run:
-          name: Build and Push Docker image
+          name: Build Docker image
           command: |
             SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-8)
+            echo "SHORT_SHA=${SHORT_SHA}" >> build.env
             echo "Docker Image: ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}"
             docker build -t ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} .
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build.env  # Persist the environment variable to the workspace
+
+  deploy:
+    executor: node-executor
+    steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Deploy to DigitalOcean
           command: |
-            SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-8)
+            source build.env  # Load the SHORT_SHA variable
             ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP "
               docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
               docker stop mikefritzsche-dev-react-app || true &&
@@ -34,7 +42,9 @@ jobs:
               docker run -d --name mikefritzsche-dev-react-app \
                 --label traefik.enable=true \
                 --label traefik.http.routers.prod-mikefritzsche-react-app.rule=Host\\(\\\`dev.mikefritzsche.com\\\`\\) \
+                --label traefik.http.routers.prod-mikefritzsche-react-app.entrypoints=websecure \
                 --label traefik.http.services.prod-mikefritzsche-react-app.loadbalancer.server.port=80 \
+
                 --network proxy \
                 ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
               echo 'Deployed image with SHA: ${SHORT_SHA}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
@@ -46,3 +56,7 @@ workflows:
     jobs:
       - build:
           context: do-secrets
+      - deploy:
+          context: do-secrets
+          requires:
+            - build
