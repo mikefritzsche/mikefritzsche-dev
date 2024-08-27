@@ -32,6 +32,7 @@ jobs:
   deploy:
     executor: node-executor
     steps:
+      - checkout  # Add checkout step to ensure the directory is a Git repository
       - attach_workspace:
           at: .
       - run:
