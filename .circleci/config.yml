@@ -32,14 +32,15 @@ jobs:
   deploy:
     executor: node-executor
     steps:
-      - checkout  # Add checkout step to ensure the directory is a Git repository
+      - checkout  # Ensures the directory is a Git repository
       - attach_workspace:
           at: .
       - run:
-          name: Configure Git
+          name: Configure Git with HTTPS
           command: |
             git config --global user.email "ci@example.com"
             git config --global user.name "CircleCI"
+            git remote set-url origin https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
       - run:
           name: Deploy to DigitalOcean
           command: |
@@ -59,11 +60,11 @@ jobs:
               && echo '[${TIMESTAMP}] Deployed image with SHA: ${SHORT_SHA}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
             "
       - run:
-          name: Create Git Tag
+          name: Create Git Tag and Push
           command: |
             source build.env
             git tag "v${SHORT_SHA}"
-            git push origin "v${SHORT_SHA}"
+            git push https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git "v${SHORT_SHA}"
       - run:
           name: List Git Tags (Debugging)
           command: git tag
