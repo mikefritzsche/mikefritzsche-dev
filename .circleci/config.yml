@@ -11,7 +11,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:nO6gr+FnuBT6+A/J49EjMDjuem5wM4zp0wbAYhFKOps"  # Updated fingerprint
+            - "SHA256:nO6gr+FnuBT6+A/J49EjMDjuem5wM4zp0wbAYhFKOps"
       - checkout
       - setup_remote_docker:
           version: 20.10.7
@@ -26,8 +26,8 @@ jobs:
       - run:
           name: Deploy to DigitalOcean
           command: |
+            SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-8)
             ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP "
-              echo 'Pulling image: ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}' &&
               docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
               docker stop mikefritzsche-dev-react-app || true &&
               docker rm mikefritzsche-dev-react-app || true &&
