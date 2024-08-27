@@ -35,8 +35,10 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Install jq
-          command: sudo apt-get update && sudo apt-get install -y jq
+          name: Configure Git
+          command: |
+            git config --global user.email "ci@example.com"
+            git config --global user.name "CircleCI"
       - run:
           name: Deploy to DigitalOcean
           command: |
@@ -56,11 +58,21 @@ jobs:
               && echo '[${TIMESTAMP}] Deployed image with SHA: ${SHORT_SHA}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
             "
       - run:
+          name: Create Git Tag
+          command: |
+            source build.env
+            git tag "v${SHORT_SHA}"
+            git push origin "v${SHORT_SHA}"
+      - run:
+          name: List Git Tags (Debugging)
+          command: git tag
+
+      - run:
           name: Create GitHub Deployment
           command: |
             source build.env
             DEPLOYMENT_ID=$(curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-              -d "{\"ref\": \"${CIRCLE_SHA1}\", \"task\": \"deploy\", \"auto_merge\": false, \"required_contexts\": [], \"environment\": \"production\", \"description\": \"Deployment of ${SHORT_SHA} to production\", \"transient_environment\": false, \"production_environment\": true}" \
+              -d "{\"ref\": \"v${SHORT_SHA}\", \"task\": \"deploy\", \"auto_merge\": false, \"required_contexts\": [], \"environment\": \"production\", \"description\": \"Deployment of ${SHORT_SHA} to production\", \"transient_environment\": false, \"production_environment\": true}" \
               https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments | jq -r .id)
             echo "Created GitHub Deployment with ID: ${DEPLOYMENT_ID}"
 
