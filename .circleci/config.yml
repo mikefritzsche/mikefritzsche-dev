@@ -11,7 +11,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:nO6gr+FnuBT6+A/J49EjMDjuem5wM4zp0wbAYhFKOps"  # Replace with the actual fingerprint of the SSH key added in project settings
+            - "SHA256:nO6gr+FnuBT6+A/J49EjMDjuem5wM4zp0wbAYhFKOps"  # Updated fingerprint
       - checkout
       - setup_remote_docker:
           version: 20.10.7
@@ -30,7 +30,7 @@ jobs:
               docker stop mikefritzsche-dev || true &&
               docker rm mikefritzsche-dev || true &&
               docker run -d --name mikefritzsche-dev --network proxy -p 80:80 ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
-              echo 'Deployed image with SHA: ${SHORT_SHA}' >> /path/to/deployment-log.txt
+              echo 'Deployed image with SHA: ${SHORT_SHA}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
             "
 
 workflows:
@@ -38,4 +38,4 @@ workflows:
   build_and_deploy:
     jobs:
       - build:
-          context: do-secrets  # Apply context at the workflow level
+          context: do-secrets
