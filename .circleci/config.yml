@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.6.0  # Ensure the Slack Orb is imported with the correct version
+
 executors:
   node-executor:
     docker:
@@ -52,6 +55,36 @@ jobs:
           root: .
           paths:
             - build.env  # Persist the environment variable to the workspace
+      - slack/notify:
+          event: pass
+          template: basic_success
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Build Success*: Docker Image ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} has been built and pushed successfully."
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: fail
+          template: basic_fail
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Build Failed*: The build process failed. Please check the logs for more details."
+                  }
+                }
+              ]
+            }
 
   deploy:
     executor: node-executor
@@ -92,7 +125,6 @@ jobs:
       - run:
           name: List Git Tags (Debugging)
           command: git tag
-
       - slack/notify:
           event: pass
           template: basic_success
