@@ -8,6 +8,7 @@ executors:
 jobs:
   build:
     executor: node-executor
+    context: do-secrets
     steps:
       - checkout
       - setup_remote_docker:
@@ -18,18 +19,18 @@ jobs:
             # Truncate the Git commit hash to the first 7 characters
             SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-7)
             
-            # Build the Docker image with the truncated commit hash as the tag
-            docker build -t mikefritzsche-dev:${SHORT_SHA} .
+            # Build the Docker image with the DOCKER_USERNAME environment variable
+            docker build -t ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} .
             
             # Login to Docker Hub using credentials from the context
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             
             # Push the image to Docker Hub
-            docker push mikefritzsche-dev:${SHORT_SHA}
+            docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
 
 workflows:
   version: 2
   build_and_deploy:
     jobs:
       - build:
-          context: do-secrets  # Apply context at the workflow level
+          context: do-secrets
