@@ -13,6 +13,9 @@ jobs:
       - setup_remote_docker:
           version: 20.10.7
       - run:
+          name: Install jq
+          command: sudo apt-get update && sudo apt-get install -y jq
+      - run:
           name: Build Docker image
           command: |
             SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-8)
@@ -31,6 +34,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run:
+          name: Install jq
+          command: sudo apt-get update && sudo apt-get install -y jq
       - run:
           name: Deploy to DigitalOcean
           command: |
@@ -54,32 +60,16 @@ jobs:
           command: |
             source build.env
             DEPLOYMENT_ID=$(curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-              -d @- https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments <<EOF | jq -r .id
-            {
-              "ref": "${CIRCLE_SHA1}",
-              "task": "deploy",
-              "auto_merge": false,
-              "required_contexts": [],
-              "environment": "production",
-              "description": "Deployment of ${SHORT_SHA} to production",
-              "transient_environment": false,
-              "production_environment": true
-            }
-            EOF
-            )
+              -d "{\"ref\": \"${CIRCLE_SHA1}\", \"task\": \"deploy\", \"auto_merge\": false, \"required_contexts\": [], \"environment\": \"production\", \"description\": \"Deployment of ${SHORT_SHA} to production\", \"transient_environment\": false, \"production_environment\": true}" \
+              https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments | jq -r .id)
             echo "Created GitHub Deployment with ID: ${DEPLOYMENT_ID}"
 
       - run:
           name: Mark Deployment as Successful
           command: |
             curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-              -d @- https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments/${DEPLOYMENT_ID}/statuses <<EOF
-            {
-              "state": "success",
-              "description": "Deployment of ${SHORT_SHA} completed successfully.",
-              "environment": "production"
-            }
-            EOF
+              -d "{\"state\": \"success\", \"description\": \"Deployment of ${SHORT_SHA} completed successfully.\", \"environment\": \"production\"}" \
+              https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments/${DEPLOYMENT_ID}/statuses
 
 workflows:
   version: 2
