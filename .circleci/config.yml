@@ -153,10 +153,12 @@ workflows:
   build_and_deploy:
     jobs:
       - build:
-          context: do-secrets
+          context:
+            - do-secrets
+            - slack-secrets
       - deploy:
           context:
             - do-secrets
-            - slack-secrets  # Add slack-secrets context here
+            - slack-secrets
           requires:
             - build
