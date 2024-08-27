@@ -13,17 +13,30 @@ jobs:
       - setup_remote_docker:
           version: 20.10.7
       - run:
-          name: Install jq
-          command: sudo apt-get update && sudo apt-get install -y jq
+          name: Install jq and semver
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq
+            npm install -g semver
+      - run:
+          name: Determine Next Semantic Version
+          command: |
+            git fetch --tags
+            CURRENT_VERSION=$(git tag --list "v*" | sort -V | tail -n1)
+            if [ -z "$CURRENT_VERSION" ]; then
+              NEW_VERSION="v1.0.0"
+            else
+              NEW_VERSION=$(semver -i patch "${CURRENT_VERSION}")
+            fi
+            echo "NEW_VERSION=${NEW_VERSION}" >> build.env
+            echo "New version determined: ${NEW_VERSION}"
       - run:
           name: Build Docker image
           command: |
-            SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-8)
-            echo "SHORT_SHA=${SHORT_SHA}" >> build.env
-            echo "Docker Image: ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}"
-            docker build -t ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} .
+            source build.env
+            echo "Docker Image: ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION}"
+            docker build -t ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} .
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-            docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
+            docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION}
       - persist_to_workspace:
           root: .
           paths:
@@ -44,10 +57,10 @@ jobs:
       - run:
           name: Deploy to DigitalOcean
           command: |
-            source build.env  # Load the SHORT_SHA variable
+            source build.env  # Load the NEW_VERSION variable
             TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
             ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP "
-              docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
+              docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} &&
               docker stop mikefritzsche-dev-react-app || true &&
               docker rm mikefritzsche-dev-react-app || true &&
               docker run -d --name mikefritzsche-dev-react-app \
@@ -56,15 +69,15 @@ jobs:
                 --label traefik.http.routers.prod-mikefritzsche-react-app.entrypoints=websecure \
                 --label traefik.http.services.prod-mikefritzsche-react-app.loadbalancer.server.port=80 \
                 --network proxy \
-                ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} \
-              && echo '[${TIMESTAMP}] Deployed image with SHA: ${SHORT_SHA}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
+                ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} \
+              && echo '[${TIMESTAMP}] Deployed image with version: ${NEW_VERSION}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
             "
       - run:
           name: Create Git Tag and Push
           command: |
             source build.env
-            git tag "v${SHORT_SHA}"
-            git push https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git "v${SHORT_SHA}"
+            git tag "${NEW_VERSION}"
+            git push https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git "${NEW_VERSION}"
       - run:
           name: List Git Tags (Debugging)
           command: git tag
@@ -74,7 +87,7 @@ jobs:
           command: |
             source build.env
             DEPLOYMENT_ID=$(curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-              -d "{\"ref\": \"v${SHORT_SHA}\", \"task\": \"deploy\", \"auto_merge\": false, \"required_contexts\": [], \"environment\": \"production\", \"description\": \"Deployment of ${SHORT_SHA} to production\", \"transient_environment\": false, \"production_environment\": true}" \
+              -d "{\"ref\": \"${NEW_VERSION}\", \"task\": \"deploy\", \"auto_merge\": false, \"required_contexts\": [], \"environment\": \"production\", \"description\": \"Deployment of ${NEW_VERSION} to production\", \"transient_environment\": false, \"production_environment\": true}" \
               https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments | jq -r .id)
             echo "Created GitHub Deployment with ID: ${DEPLOYMENT_ID}"
 
@@ -82,7 +95,7 @@ jobs:
           name: Mark Deployment as Successful
           command: |
             curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-              -d "{\"state\": \"success\", \"description\": \"Deployment of ${SHORT_SHA} completed successfully.\", \"environment\": \"production\"}" \
+              -d "{\"state\": \"success\", \"description\": \"Deployment of ${NEW_VERSION} completed successfully.\", \"environment\": \"production\"}" \
               https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments/${DEPLOYMENT_ID}/statuses
 
 workflows:
