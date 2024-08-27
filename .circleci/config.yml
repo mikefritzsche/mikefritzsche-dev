@@ -112,4 +112,50 @@ jobs:
           command: |
             source build.env
             git tag "${NEW_VERSION}"
-            git push https://${GITHUB_TOKEN}:x-o​⬤
+            git push https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git "${NEW_VERSION}"
+      - run:
+          name: List Git Tags (Debugging)
+          command: git tag
+      - slack/notify:
+          event: pass
+          template: basic_success
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Success*: The image ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} has been deployed successfully."
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: fail
+          template: basic_fail
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Failed*: The deployment process failed. Please check the logs for more details."
+                  }
+                }
+              ]
+            }
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build:
+          context: do-secrets
+      - deploy:
+          context:
+            - do-secrets
+            - slack-secrets  # Add slack-secrets context here
+          requires:
+            - build
