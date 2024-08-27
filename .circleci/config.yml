@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.9.2  # Slack Orb
+
 executors:
   node-executor:
     docker:
@@ -43,6 +46,36 @@ jobs:
           root: .
           paths:
             - build.env  # Persist the environment variable to the workspace
+      - slack/notify:
+          event: pass
+          template: "Basic success message"
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Build Success*: Docker Image ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} has been built and pushed successfully."
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: fail
+          template: "Basic failure message"
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Build Failed*: The build process failed. Please check the logs for more details."
+                  }
+                }
+              ]
+            }
 
   deploy:
     executor: node-executor
@@ -83,22 +116,36 @@ jobs:
       - run:
           name: List Git Tags (Debugging)
           command: git tag
-
-      - run:
-          name: Create GitHub Deployment
-          command: |
-            source build.env
-            DEPLOYMENT_ID=$(curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-              -d "{\"ref\": \"${NEW_VERSION}\", \"task\": \"deploy\", \"auto_merge\": false, \"required_contexts\": [], \"environment\": \"production\", \"description\": \"Deployment of ${NEW_VERSION} to production\", \"transient_environment\": false, \"production_environment\": true}" \
-              https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments | jq -r .id)
-            echo "Created GitHub Deployment with ID: ${DEPLOYMENT_ID}"
-
-      - run:
-          name: Mark Deployment as Successful
-          command: |
-            curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-              -d "{\"state\": \"success\", \"description\": \"Deployment of ${NEW_VERSION} completed successfully.\", \"environment\": \"production\"}" \
-              https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments/${DEPLOYMENT_ID}/statuses
+      - slack/notify:
+          event: pass
+          template: "Basic success message"
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Success*: The image ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} has been deployed successfully."
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: fail
+          template: "Basic failure message"
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Failed*: The deployment process failed. Please check the logs for more details."
+                  }
+                }
+              ]
+            }
 
 workflows:
   version: 2
@@ -107,6 +154,8 @@ workflows:
       - build:
           context: do-secrets
       - deploy:
-          context: do-secrets
+          context:
+            - do-secrets
+            - slack-secrets  # Add slack-secrets context here
           requires:
             - build
