@@ -23,7 +23,7 @@ jobs:
             echo "Docker Image: ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}"
             docker build -t ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} .
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-            docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
+            docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}"
       - persist_to_workspace:
           root: .
           paths:
@@ -36,15 +36,35 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Configure Git with HTTPS
+          name: Configure Git for HTTPS
           command: |
             git config --global user.email "ci@example.com"
             git config --global user.name "CircleCI"
             git remote set-url origin https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
       - run:
+          name: Determine Next Semantic Version
+          command: |
+            # Get the latest tag
+            LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+            
+            if [ -z "$LATEST_TAG" ]; then
+              # If there are no tags, start with v0.1.0
+              NEXT_TAG="v0.1.0"
+            else
+              # Increment the patch version of the latest tag
+              MAJOR=$(echo $LATEST_TAG | awk -F'[v.]' '{print $2}')
+              MINOR=$(echo $LATEST_TAG | awk -F'[v.]' '{print $3}')
+              PATCH=$(echo $LATEST_TAG | awk -F'[v.]' '{print $4}')
+              PATCH=$((PATCH + 1))
+              NEXT_TAG="v$MAJOR.$MINOR.$PATCH"
+            fi
+            
+            echo "NEXT_TAG=${NEXT_TAG}" >> build.env
+            echo "Next tag will be: ${NEXT_TAG}"
+      - run:
           name: Deploy to DigitalOcean
           command: |
-            source build.env  # Load the SHORT_SHA variable
+            source build.env  # Load the NEXT_TAG variable
             TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
             ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP "
               docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
@@ -57,14 +77,14 @@ jobs:
                 --label traefik.http.services.prod-mikefritzsche-react-app.loadbalancer.server.port=80 \
                 --network proxy \
                 ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} \
-              && echo '[${TIMESTAMP}] Deployed image with SHA: ${SHORT_SHA}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
+              && echo '[${TIMESTAMP}] Deployed image with tag: ${NEXT_TAG}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
             "
       - run:
           name: Create Git Tag and Push
           command: |
             source build.env
-            git tag "v${SHORT_SHA}"
-            git push https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git "v${SHORT_SHA}"
+            git tag "${NEXT_TAG}"
+            git push https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git "${NEXT_TAG}"
       - run:
           name: List Git Tags (Debugging)
           command: git tag
@@ -74,7 +94,7 @@ jobs:
           command: |
             source build.env
             DEPLOYMENT_ID=$(curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-              -d "{\"ref\": \"v${SHORT_SHA}\", \"task\": \"deploy\", \"auto_merge\": false, \"required_contexts\": [], \"environment\": \"production\", \"description\": \"Deployment of ${SHORT_SHA} to production\", \"transient_environment\": false, \"production_environment\": true}" \
+              -d "{\"ref\": \"${NEXT_TAG}\", \"task\": \"deploy\", \"auto_merge\": false, \"required_contexts\": [], \"environment\": \"production\", \"description\": \"Deployment of ${NEXT_TAG} to production\", \"transient_environment\": false, \"production_environment\": true}" \
               https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments | jq -r .id)
             echo "Created GitHub Deployment with ID: ${DEPLOYMENT_ID}"
 
@@ -82,7 +102,7 @@ jobs:
           name: Mark Deployment as Successful
           command: |
             curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-              -d "{\"state\": \"success\", \"description\": \"Deployment of ${SHORT_SHA} completed successfully.\", \"environment\": \"production\"}" \
+              -d "{\"state\": \"success\", \"description\": \"Deployment of ${NEXT_TAG} completed successfully.\", \"environment\": \"production\"}" \
               https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments/${DEPLOYMENT_ID}/statuses
 
 workflows:
