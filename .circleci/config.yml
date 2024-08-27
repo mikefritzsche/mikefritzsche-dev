@@ -31,7 +31,13 @@ jobs:
               docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
               docker stop mikefritzsche-dev-react-app || true &&
               docker rm mikefritzsche-dev-react-app || true &&
-              docker run -d --name mikefritzsche-dev-react-app --network proxy -p 80:80 ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
+              docker run -d --name mikefritzsche-dev-react-app \
+                --label traefik.enable=true \
+                --label traefik.http.routers.prod-mikefritzsche-react-app.rule=Host\\(\\\`dev.mikefritzsche.com\\\`\\) \
+                --label traefik.http.routers.prod-mikefritzsche-react-app.tls=true \
+                --label traefik.http.services.prod-mikefritzsche-react-app.loadbalancer.server.port=80 \
+                --network proxy \
+                ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
               echo 'Deployed image with SHA: ${SHORT_SHA}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
             "
 
