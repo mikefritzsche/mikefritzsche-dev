@@ -31,7 +31,7 @@ jobs:
           name: Deploy to DigitalOcean
           command: |
             # SSH into DigitalOcean and run Docker commands
-            ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP <<EOF
+            ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP <<-EOF
               # Pull the latest image
               docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
             
