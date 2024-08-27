@@ -19,6 +19,7 @@ jobs:
           name: Build and Push Docker image
           command: |
             SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-8)
+            echo "Docker Image: ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}"
             docker build -t ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} .
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
@@ -26,6 +27,7 @@ jobs:
           name: Deploy to DigitalOcean
           command: |
             ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP "
+              echo 'Pulling image: ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}' &&
               docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
               docker stop mikefritzsche-dev-react-app || true &&
               docker rm mikefritzsche-dev-react-app || true &&
