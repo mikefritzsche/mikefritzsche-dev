@@ -8,7 +8,6 @@ executors:
 jobs:
   build:
     executor: node-executor
-    context: do-secrets
     steps:
       - checkout
       - setup_remote_docker:
@@ -33,4 +32,4 @@ workflows:
   build_and_deploy:
     jobs:
       - build:
-          context: do-secrets
+          context: do-secrets  # Apply context at the workflow level
