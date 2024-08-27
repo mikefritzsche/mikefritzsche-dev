@@ -13,25 +13,23 @@ jobs:
       - setup_remote_docker:
           version: 20.10.7
       - run:
+          name: Set up SSH key for DigitalOcean
+          command: |
+            mkdir -p ~/.ssh
+            echo "$DO_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            ssh-keyscan -H $DO_MIKE_SERVER_IP >> ~/.ssh/known_hosts
+      - run:
           name: Build and Push Docker image
           command: |
-            # Truncate the Git commit hash to the first 8 characters
             SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-8)
-            
-            # Build the Docker image with the DOCKER_USERNAME environment variable
             docker build -t ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} .
-            
-            # Login to Docker Hub using credentials from the context
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-            
-            # Push the image to Docker Hub
             docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA}
-
       - run:
           name: Deploy to DigitalOcean
           command: |
-            # SSH into DigitalOcean and run Docker commands
-            ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP "
+            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP "
               docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
               docker stop mikefritzsche-dev || true &&
               docker rm mikefritzsche-dev || true &&
