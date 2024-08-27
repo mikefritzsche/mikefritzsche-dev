@@ -27,9 +27,9 @@ jobs:
           command: |
             ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP "
               docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
-              docker stop mikefritzsche-dev || true &&
-              docker rm mikefritzsche-dev || true &&
-              docker run -d --name mikefritzsche-dev --network proxy -p 80:80 ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
+              docker stop mikefritzsche-dev-react-app || true &&
+              docker rm mikefritzsche-dev-react-app || true &&
+              docker run -d --name mikefritzsche-dev-react-app --network proxy -p 80:80 ${DOCKER_USERNAME}/mikefritzsche-dev:${SHORT_SHA} &&
               echo 'Deployed image with SHA: ${SHORT_SHA}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
             "
 
