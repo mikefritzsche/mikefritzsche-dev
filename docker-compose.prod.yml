@@ -1,8 +1,8 @@
 version: '3.8'
 
 services:
-  prod-mikefritzsche-react-app:
-    container_name: prod-mikefritzsche-react-app
+  mikefritzsche-dev-react-app:
+    container_name: mikefritzsche-dev-react-app
     build:
       context: .
       dockerfile: Dockerfile

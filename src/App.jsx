@@ -1,5 +1,11 @@
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import './App.css';
+import './styles.scss';
+import NavBar from "./components/NavBar";
+import Logo from './components/Logo';
+import Resume from "./components/Resume";
+import Menu from "./components/Menu.jsx";
+import Services from "./components/Services.jsx";
 
 function App() {
   const [fadeOut, setFadeOut] = useState(false);
@@ -33,20 +39,21 @@ function App() {
     <>
       {!showNavbar && (
         <div className="center-container">
-          <h1 className={`logo ${fadeOut ? 'fade-out' : ''}`}>Mike Fritzsche</h1>
+          <h1 className={`logo ${fadeOut ? 'fade-out' : ''}`}><Logo/></h1>
         </div>
       )}
       {showNavbar && (
-        <nav className="navbar">
-          <h1 className="navbar-logo">Mike Fritzsche</h1>
-          <button onClick={() => {
-            localStorage.removeItem('hasVisited');
-            document.body.classList.remove('navbar-visible');
-            window.location.reload(); // Reload the page to see the effect again
-          }} className="reset-button">Reset Visit</button>
-        </nav>
+        <>
+          <NavBar/>
+          <div className="container">
+            <div className="content">
+              <Menu/>
+              <Services/>
+              <Resume/>
+            </div>
+          </div>
+        </>
       )}
-      <div className="card"></div>
     </>
   );
 }

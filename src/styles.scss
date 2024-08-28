@@ -1,0 +1,38 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box; /* Ensure padding is included in width calculation */
+  z-index: 1000; /* Ensure the navbar stays on top */
+  background: url('./assets/358289.jpg'), linear-gradient(45deg, #ff006e, #ffbe0b, #8338ec, #3a86ff);
+  background-size: cover, 300% 300%;
+  background-position: 50px 20px, 0% 50%;
+  background-blend-mode: overlay; /* Blend the image with the gradient */
+  animation: gradientAnimation 6s ease infinite;
+  box-shadow: 0 5px 6px rgba(0, 0, 0, 0.5);
+}
+.menu {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin: 0 0 0 20px;
+  padding: 0;
+
+  li {
+    list-style-type: none;
+    font-weight: bold;
+    color: #fff;
+    padding: 5px 10px;
+    background-color: #8338ec;
+    border-radius: 5px;
+    &:hover {
+      background-color: #ff8800;
+      cursor: pointer;
+    }
+  }
+}
