@@ -1,7 +1,8 @@
+import {Link} from "react-router-dom";
 
 const Logo = () => {
   return (
-    <>{'<Mike Fritzsche />'}</>
+    <Link to={'/'}>{'<Mike Fritzsche />'}</Link>
   );
 }
 

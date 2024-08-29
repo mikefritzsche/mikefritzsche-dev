@@ -4,7 +4,7 @@ html, body {
     height: 100%;
     width: 100%;
     box-sizing: border-box;
-    overflow: hidden; /* Prevent any overflow */
+    /*overflow: hidden;*/
     background: linear-gradient(45deg, #ff006e, #ffbe0b, #8338ec, #3a86ff);
     background-size: 300% 300%;
     animation: gradientAnimation 6s ease infinite;
@@ -17,24 +17,7 @@ body.navbar-visible {
 
 #root {
     width: 100%;
-    /*min-width: 320px;*/
-    /*max-width: 100%;*/
-    /*flex-basis: 98%;*/
-    /*margin: 0 auto;*/
-    /*padding: 0;*/
-    /*height: 100vh;*/
-    /*display: flex;*/
-    /*justify-content: center;*/
-    /*align-items: center;*/
-    /*box-sizing: border-box; !* Ensure padding is included in width calculation *!*/
     background: none; /* Remove background from #root */
-}
-.container {
-    margin-top: 67px;
-    box-sizing: border-box; /* Ensure padding is included in width calculation */
-}
-.content {
-    width: 100%;
 }
 
 .center-container {
@@ -68,12 +51,6 @@ body.navbar-visible {
     }
 }
 
-.navbar-logo {
-    color: white;
-    font-size: 2rem;
-    margin: 0;
-}
-
 .reset-button {
     background-color: #555;
     color: white;
@@ -88,19 +65,3 @@ body.navbar-visible {
     background-color: #777;
 }
 
-.card {
-    margin-top: 2rem;
-    margin-right: 20px;
-    min-height: 200px;
-    min-width: 200px;
-    border-radius: 5px;
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
-    background-color: #fff;
-    border: 2px solid #333;
-    box-sizing: border-box; /* Ensure padding is included in width calculation */
-    color: #242424;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 25%;
-}

@@ -11,17 +11,16 @@
 .services-card__header, .service-card__body, .service-card__footer {
   padding: 5px;
 }
-.services-container .card:first-child {
-  margin-left: 20px;
+.services-container {
+  &.card:first-child {
+    margin-left: 20px;
+  }
+  &.last-child {
+    margin-right: 0;
+  }
+  .services-card__header {
+    background: #ff8100;
+    padding: 5px;
+  }
 }
-.services-container .services-card {
 
-}
-.services-container .services-card__header {
-  background: #ff8100;
-  padding: 5px;
-}
-.services-container .service-card__body {
-
-}
-.services-container .service-card__footer {}

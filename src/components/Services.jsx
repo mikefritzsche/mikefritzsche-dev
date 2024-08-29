@@ -27,53 +27,58 @@ const services = [
     image: ''
   },
 ]
-export default () => {
+const Services = () => {
   return (
-    <div className="services-container">
-      <Card>
-        <CardHeader className="services-card services-card__header">
-          Header
-        </CardHeader>
-        <CardBody className="services-card service-card__body">
-          Service #1
-        </CardBody>
-        <CardFooter className="services-card service-card__footer">
-          Footer
-        </CardFooter>
-      </Card>
-      <Card>
-        <CardHeader className="services-card services-card__header">
-          Header
-        </CardHeader>
-        <CardBody className="services-card service-card__body">
-          Service #1
-        </CardBody>
-        <CardFooter className="services-card service-card__footer">
-          Footer
-        </CardFooter>
-      </Card>
-      <Card>
-        <CardHeader className="services-card services-card__header">
-          Header
-        </CardHeader>
-        <CardBody className="services-card service-card__body">
-          Service #1
-        </CardBody>
-        <CardFooter className="services-card service-card__footer">
-          Footer
-        </CardFooter>
-      </Card>
-      <Card>
-        <CardHeader className="services-card services-card__header">
-          Header
-        </CardHeader>
-        <CardBody className="services-card service-card__body">
-          Service #1
-        </CardBody>
-        <CardFooter className="services-card service-card__footer">
-          Footer
-        </CardFooter>
-      </Card>
-    </div>
+    <>
+      <h1>Services</h1>
+      <div className="services-container">
+        <Card>
+          <CardHeader className="services-card services-card__header">
+            Header
+          </CardHeader>
+          <CardBody className="services-card service-card__body">
+            Service #1
+          </CardBody>
+          <CardFooter className="services-card service-card__footer">
+            Footer
+          </CardFooter>
+        </Card>
+        <Card>
+          <CardHeader className="services-card services-card__header">
+            Header
+          </CardHeader>
+          <CardBody className="services-card service-card__body">
+            Service #1
+          </CardBody>
+          <CardFooter className="services-card service-card__footer">
+            Footer
+          </CardFooter>
+        </Card>
+        <Card>
+          <CardHeader className="services-card services-card__header">
+            Header
+          </CardHeader>
+          <CardBody className="services-card service-card__body">
+            Service #1
+          </CardBody>
+          <CardFooter className="services-card service-card__footer">
+            Footer
+          </CardFooter>
+        </Card>
+        <Card>
+          <CardHeader className="services-card services-card__header">
+            Header
+          </CardHeader>
+          <CardBody className="services-card service-card__body">
+            Service #1
+          </CardBody>
+          <CardFooter className="services-card service-card__footer">
+            Footer
+          </CardFooter>
+        </Card>
+      </div>
+    </>
   )
 }
+
+export default Services

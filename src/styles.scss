@@ -1,3 +1,31 @@
+.navbar-logo {
+  color: white;
+  font-size: 2rem;
+  margin: 0;
+  font-weight: bold;
+  line-height: 100%;
+
+  a {
+    color: #fff;
+    text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.8);
+    &:hover {
+      color: #a7a7a7;
+    }
+  }
+}
+
+.container {
+  box-sizing: border-box;
+  background-color: #333;
+}
+.content {
+  width: 100%;
+  padding: 70px 20px 20px 20px;
+  & > h1 {
+    padding: 0;
+    margin: 0;
+  }
+}
 .navbar {
   position: fixed;
   top: 0;
@@ -20,8 +48,11 @@
   display: flex;
   flex-direction: row;
   gap: 10px;
-  margin: 0 0 0 20px;
-  padding: 0;
+  margin: 0;
+  padding: 0 0 0 20px;
+  margin-top: 45px;
+  background: #333;
+  position: fixed;
 
   li {
     list-style-type: none;
@@ -30,9 +61,58 @@
     padding: 5px 10px;
     background-color: #8338ec;
     border-radius: 5px;
-    &:hover {
+
+    // Hover effect only if not active
+    &:not(.active):hover {
       background-color: #ff8800;
       cursor: pointer;
     }
+
+    // Active state styling
+    &.active {
+      background-color: #002aff; // Highlighted background color for active item
+      color: #fff; // Ensure text color remains white
+      border-bottom: 2px solid #002aff; // Optional underline to indicate active item
+    }
   }
+}
+
+.card {
+  margin-right: 20px;
+  min-height: 200px;
+  min-width: 200px;
+  border-radius: 5px;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+  background-color: #fff;
+  border: 2px solid #333;
+  box-sizing: border-box; /* Ensure padding is included in width calculation */
+  color: #242424;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 25%;
+}
+
+
+/* route transitions */
+.fade-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.fade-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: opacity 300ms, transform 300ms;
 }

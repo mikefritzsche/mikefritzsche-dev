@@ -1,22 +1,19 @@
-import {useEffect, useState} from 'react';
+import { useEffect } from 'react';
 import './App.css';
 import './styles.scss';
-import NavBar from "./components/NavBar";
 import Logo from './components/Logo';
-import Resume from "./components/Resume";
-import Menu from "./components/Menu.jsx";
-import Services from "./components/Services.jsx";
+import useNavbarStore from './stores/useNavbarStore';
+import HomePage from "./pages/HomePage.jsx";
 
 function App() {
-  const [fadeOut, setFadeOut] = useState(false);
-  const [showNavbar, setShowNavbar] = useState(false);
+  const { fadeOut, showNavbar, setFadeOut, setShowNavbar } = useNavbarStore();
 
   useEffect(() => {
     const hasVisited = localStorage.getItem('hasVisited');
 
     if (hasVisited) {
       setShowNavbar(true);
-      document.body.classList.add('navbar-visible'); // Change to solid background color
+      document.body.classList.add('navbar-visible');
     } else {
       const timer = setTimeout(() => {
         setFadeOut(true);
@@ -24,7 +21,7 @@ function App() {
 
       const fadeTimer = setTimeout(() => {
         setShowNavbar(true);
-        document.body.classList.add('navbar-visible'); // Change to solid background color
+        document.body.classList.add('navbar-visible');
         localStorage.setItem('hasVisited', 'true');
       }, 2000); // Show navbar after 2 seconds to ensure full fade out
 
@@ -33,7 +30,7 @@ function App() {
         clearTimeout(fadeTimer);
       };
     }
-  }, []);
+  }, [setFadeOut, setShowNavbar]);
 
   return (
     <>
@@ -43,16 +40,7 @@ function App() {
         </div>
       )}
       {showNavbar && (
-        <>
-          <NavBar/>
-          <div className="container">
-            <div className="content">
-              <Menu/>
-              <Services/>
-              <Resume/>
-            </div>
-          </div>
-        </>
+        <HomePage />
       )}
     </>
   );

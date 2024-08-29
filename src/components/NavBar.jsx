@@ -3,7 +3,7 @@ import Logo from '../components/Logo';
 const NavBar = () => {
   return (
     <nav className="navbar">
-      <h1 className="navbar-logo"><Logo/></h1>
+      <div className="navbar-logo"><Logo/></div>
       <button onClick={() => {
         localStorage.removeItem('hasVisited');
         document.body.classList.remove('navbar-visible');
