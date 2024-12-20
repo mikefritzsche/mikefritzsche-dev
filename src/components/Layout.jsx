@@ -30,7 +30,8 @@ const Layout = () => {
   return (
     <>
       <Logo />
-      <NavBar />
+      {/* Pass the current path to NavBar */}
+      <NavBar currentPath={location.pathname} />
       <Menu />
       <div className="container">
         <div className="content">

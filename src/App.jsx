@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import './App.css';
-import './styles.scss';
+// import './styles.scss';
+import './styles/styles.scss'
 import Logo from './components/Logo';
 import useNavbarStore from './stores/useNavbarStore';
 import HomePage from "./pages/HomePage.jsx";

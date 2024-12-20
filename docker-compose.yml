@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   dev-mikefritzsche-react-app:
     container_name: dev-mikefritzsche-react-app
@@ -15,7 +13,7 @@ services:
       - "5173:5173"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dev-mikefritzsche-react-app.rule=Host(`dev.mikefritzsche.localhost`)"
+      - "traefik.http.routers.dev-mikefritzsche-react-app.rule=Host(`dev.mikefritzsche.local`)"
       - "traefik.http.services.dev-mikefritzsche-react-app.loadbalancer.server.port=5173"
     networks:
       - proxy

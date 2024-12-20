@@ -1,0 +1,34 @@
+.navbar-logo {
+  color: $color-text;
+  font-size: 2rem;
+  margin: 0;
+  font-weight: bold;
+  line-height: 100%;
+
+  a {
+    color: $color-text;
+    text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.8);
+    &:hover {
+      color: #a7a7a7;
+    }
+  }
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  z-index: 1050; // Higher z-index to stay on top
+  background: url('./assets/358289.jpg'), linear-gradient(45deg, #ff006e, #ffbe0b, #8338ec, #3a86ff);
+  background-size: cover, 300% 300%;
+  background-position: 50px 20px, 0% 50%;
+  background-blend-mode: overlay;
+  animation: gradientAnimation 6s ease infinite;
+  box-shadow: 0 5px 6px rgba(0, 0, 0, 0.5);
+}
