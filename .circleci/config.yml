@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          docker_layer_caching: true  # Enable Docker layer caching
+          docker_layer_caching: true
       - run:
           name: Install jq and semver
           command: |
@@ -25,7 +25,6 @@ jobs:
           command: |
             set -e
             git fetch --tags
-            # Determine the initial version without the 'v' prefix
             CURRENT_VERSION=$(git tag --list | sort -V | tail -n1)
             echo "CURRENT_VERSION=${CURRENT_VERSION}"
             if [ -z "$CURRENT_VERSION" ]; then
@@ -34,57 +33,66 @@ jobs:
               NEW_VERSION=$(npx semver -i patch "${CURRENT_VERSION}")
             fi
             
-            # Check if the tag already exists and increment if necessary
             while git rev-parse "${NEW_VERSION}" >/dev/null 2>&1; do
               echo "Tag ${NEW_VERSION} already exists. Incrementing patch version."
               NEW_VERSION=$(npx semver -i patch "${NEW_VERSION}")
             done
             
-            echo "Final version: ${NEW_VERSION}"
             echo "NEW_VERSION=${NEW_VERSION}" >> build.env
             echo "New version determined: ${NEW_VERSION}"
       - run:
-          name: Build Docker image
+          name: Build and Save Docker image
           command: |
             source build.env
-            echo "Docker Image: ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION}"
-            docker build -t ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} .
-            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-            docker push ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION}
+            IMAGE_NAME="mikefritzsche-dev:${NEW_VERSION}"
+            docker build -t ${IMAGE_NAME} .
+            docker save ${IMAGE_NAME} | gzip > image.tar.gz
       - persist_to_workspace:
           root: .
           paths:
-            - build.env  # Persist the environment variable to the workspace
+            - build.env
+            - image.tar.gz
 
   deploy:
     executor: node-executor
     steps:
-      - checkout  # Ensures the directory is a Git repository
+      - checkout
       - attach_workspace:
           at: .
       - run:
-          name: Configure Git with HTTPS
+          name: Configure Git
           command: |
             git config --global user.email "ci@example.com"
             git config --global user.name "CircleCI"
-            git remote set-url origin https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
       - run:
           name: Deploy to DigitalOcean
           command: |
-            source build.env  # Load the NEW_VERSION variable
+            source build.env
             TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
+            
+            # Copy the Docker image to the server
+            scp -o StrictHostKeyChecking=no image.tar.gz $DO_SSH_USER@$DO_MIKE_SERVER_IP:/tmp/
+            
+            # Load and run the image on the server
             ssh -o StrictHostKeyChecking=no $DO_SSH_USER@$DO_MIKE_SERVER_IP "
-              docker pull ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} &&
+              # Load the Docker image
+              docker load < /tmp/image.tar.gz &&
+              rm /tmp/image.tar.gz &&
+            
+              # Stop and remove existing container
               docker stop mikefritzsche-dev-react-app || true &&
               docker rm mikefritzsche-dev-react-app || true &&
+            
+              # Run the new container
               docker run -d --name mikefritzsche-dev-react-app \
                 --label traefik.enable=true \
                 --label traefik.http.routers.prod-mikefritzsche-react-app.rule=Host\\(\\\`dev.mikefritzsche.com\\\`\\) \
                 --label traefik.http.routers.prod-mikefritzsche-react-app.entrypoints=websecure \
                 --label traefik.http.services.prod-mikefritzsche-react-app.loadbalancer.server.port=80 \
                 --network proxy \
-                ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} \
-              && echo '[${TIMESTAMP}] Deployed image with version: ${NEW_VERSION}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
+                mikefritzsche-dev:${NEW_VERSION} &&
+            
+              echo '[${TIMESTAMP}] Deployed version: ${NEW_VERSION}' >> /home/mikefritzsche/app/main-dev/deployment-log.txt
             "
       - run:
           name: Create Git Tag and Push
@@ -92,9 +100,6 @@ jobs:
             source build.env
             git tag "${NEW_VERSION}"
             git push https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git "${NEW_VERSION}"
-      - run:
-          name: List Git Tags (Debugging)
-          command: git tag
       - slack/notify:
           event: pass
           template: basic_success
@@ -105,26 +110,14 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Deployment Success*: The image ${DOCKER_USERNAME}/mikefritzsche-dev:${NEW_VERSION} has been deployed successfully."
+                    "text": "*Deployment Success*: Version ${NEW_VERSION} has been deployed successfully."
                   }
                 }
               ]
             }
       - slack/notify:
           event: fail
-          template: basic_fail
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Deployment Failed*: The deployment process failed. Please check the logs for more details."
-                  }
-                }
-              ]
-            }
+          template: basic_fail_1
 
 workflows:
   version: 2
