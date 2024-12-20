@@ -100,9 +100,13 @@ jobs:
             source build.env
             git tag "${NEW_VERSION}"
             git push https://${GITHUB_TOKEN}:x-oauth-basic@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git "${NEW_VERSION}"
+      - run:
+          name: Prepare Slack Message
+          command: |
+            source build.env
+            echo 'export SLACK_MESSAGE="*Deployment Success*: Version '"${NEW_VERSION}"' has been deployed successfully."' >> $BASH_ENV
       - slack/notify:
           event: pass
-          template: basic_success
           custom: |
             {
               "blocks": [
@@ -110,7 +114,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Deployment Success*: Version ${NEW_VERSION} has been deployed successfully."
+                    "text": "${SLACK_MESSAGE}"
                   }
                 }
               ]
