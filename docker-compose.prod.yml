@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mikefritzsche-dev-react-app:
     container_name: mikefritzsche-dev-react-app
