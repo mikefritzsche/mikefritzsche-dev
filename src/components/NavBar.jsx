@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const NavBar = ({ currentPath = '/' }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate(); // React Router's navigation method
 
   const navItems = [
     { path: '/', label: 'Home' },
@@ -35,7 +37,7 @@ const NavBar = ({ currentPath = '/' }) => {
             key={path}
             className={currentPath === path ? 'active' : ''}
             onClick={() => {
-              window.location.href = path;
+              navigate(path); // Navigate without reloading
               setIsMenuOpen(false);
             }}
           >
@@ -48,20 +50,3 @@ const NavBar = ({ currentPath = '/' }) => {
 };
 
 export default NavBar;
-// import Logo from '../components/Logo';
-//
-// const NavBar = () => {
-//   return (
-//     <nav className="navbar">
-//       <div className="navbar-logo"><Logo/></div>
-//       <button onClick={() => {
-//         localStorage.removeItem('hasVisited');
-//         document.body.classList.remove('navbar-visible');
-//         window.location.reload(); // Reload the page to see the effect again
-//       }} className="reset-button">Reset Visit
-//       </button>
-//     </nav>
-//   );
-// }
-//
-// export default NavBar

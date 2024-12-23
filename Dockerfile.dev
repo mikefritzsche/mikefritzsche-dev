@@ -1,12 +1,37 @@
-# Dockerfile.dev
-FROM node:18-alpine
-
+# Stage 1: Dependencies
+FROM node:18-alpine AS deps
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
 
-COPY package.json ./
+# Stage 2: Builder
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 RUN npm install
 
-COPY . ./
+# Stage 3: Runner
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+# Add a non-root user
+RUN addgroup -g 1001 -S nodeapp && \
+    adduser -S reactuser -u 1001 -G nodeapp
+
+# Copy only necessary files from builder
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/vite.config.js ./
+COPY --from=builder /app/index.html ./
+
+# Set correct permissions
+RUN chown -R reactuser:nodeapp /app
+
+# Switch to non-root user
+USER reactuser
 
 EXPOSE 5173
 
