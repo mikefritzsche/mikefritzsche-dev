@@ -23,12 +23,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-sizing: border-box; /* Ensure padding is included in width calculation */
-  z-index: 1000; /* Ensure the navbar stays on top */
+  box-sizing: border-box;
+  z-index: 1000;
   background: url('/358289.jpg'), linear-gradient(45deg, #ff006e, #ffbe0b, #8338ec, #3a86ff);
   background-size: cover, 300% 300%;
-  background-position: 50px 20px, 0% 50%;
-  background-blend-mode: overlay; /* Blend the image with the gradient */
+  background-position: center, 0% 50%; /* Changed to center for the image */
+  background-repeat: no-repeat; /* Add this to prevent tiling */
+  background-blend-mode: overlay;
   animation: gradientAnimation 6s ease infinite;
   box-shadow: 0 5px 6px rgba(0, 0, 0, 0.5);
 }
