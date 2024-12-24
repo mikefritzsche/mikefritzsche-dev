@@ -23,12 +23,53 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-sizing: border-box;
-  z-index: 1050; // Higher z-index to stay on top
-  background: url('./assets/358289.jpg'), linear-gradient(45deg, #ff006e, #ffbe0b, #8338ec, #3a86ff);
+  box-sizing: border-box; /* Ensure padding is included in width calculation */
+  z-index: 1000; /* Ensure the navbar stays on top */
+  background: url('/358289.jpg'), linear-gradient(45deg, #ff006e, #ffbe0b, #8338ec, #3a86ff);
   background-size: cover, 300% 300%;
   background-position: 50px 20px, 0% 50%;
-  background-blend-mode: overlay;
+  background-blend-mode: overlay; /* Blend the image with the gradient */
   animation: gradientAnimation 6s ease infinite;
   box-shadow: 0 5px 6px rgba(0, 0, 0, 0.5);
+}
+
+.mobile-menu-button {
+  display: none; // Hidden by default on desktop
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  z-index: 1001;
+
+  @media (max-width: 768px) {
+    display: block; // Show on mobile
+  }
+
+  .hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 20px;
+
+    span {
+      display: block;
+      height: 2px;
+      width: 100%;
+      background-color: white;
+      transition: all 0.3s ease;
+    }
+
+    &.open {
+      span:first-child {
+        transform: translateY(9px) rotate(45deg);
+      }
+      span:nth-child(2) {
+        opacity: 0;
+      }
+      span:last-child {
+        transform: translateY(-9px) rotate(-45deg);
+      }
+    }
+  }
 }
